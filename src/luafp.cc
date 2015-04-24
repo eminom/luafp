@@ -12,7 +12,7 @@ extern "C"{
 #include "fp/fixed_func.h"
 #include "fp/fixed_class.h"
 
-#define MetaFixPointNumber      "MetaFixPointNumberXX"
+#define _METAFPN_      "_METAFPN_XX"
 
 typedef fixedpoint::fixed_point<16> fix16;
 
@@ -20,15 +20,15 @@ typedef fixedpoint::fixed_point<16> fix16;
 
 // Hand-crafted codes.
 
-struct FixNumber
+struct NFix
 {
     fix16 value;
 };
 
-static void _pushFixNumber(lua_State *S, fix16 v)
+static void _pushNFix(lua_State *S, fix16 v)
 {
-    FixNumber *fp = (FixNumber*)lua_newuserdata(S, sizeof(FixNumber));
-    luaL_getmetatable(S, MetaFixPointNumber);
+    NFix *fp = (NFix*)lua_newuserdata(S, sizeof(NFix));
+    luaL_getmetatable(S, _METAFPN_);
     lua_setmetatable(S, -2);
     fp->value = v;
 }
@@ -40,9 +40,9 @@ static int _fp##__NAME__(lua_State *S)\
     if(top<2){\
         luaL_error(S, "Error parameter count for " #__NAME__);\
     }\
-    FixNumber *p0 = (FixNumber*)luaL_checkudata(S, 1, MetaFixPointNumber);\
-    FixNumber *p1 = (FixNumber*)luaL_checkudata(S, 2, MetaFixPointNumber);\
-    _pushFixNumber(S, p0->value __OP__ p1->value);\
+    NFix *p0 = (NFix*)luaL_checkudata(S, 1, _METAFPN_);\
+    NFix *p1 = (NFix*)luaL_checkudata(S, 2, _METAFPN_);\
+    _pushNFix(S, p0->value __OP__ p1->value);\
     return 1;\
 }
 
@@ -58,8 +58,8 @@ static int _fpUnm(lua_State *S)
     if(lua_gettop(S)!=1){
         luaL_error(S, "Error count of parameter for -");
     }
-    FixNumber *p0 = (FixNumber*)luaL_checkudata(S, 1, MetaFixPointNumber);
-    _pushFixNumber(S, - p0->value);
+    NFix *p0 = (NFix*)luaL_checkudata(S, 1, _METAFPN_);
+    _pushNFix(S, - p0->value);
     return 1;
 }
 
@@ -77,8 +77,8 @@ static int _fp##__NAME__(lua_State *S)\
     if(lua_gettop(S)!=2){\
         luaL_error(S, "Wrong number for comparison operator");\
     }\
-    FixNumber *p0 = (FixNumber*)luaL_checkudata(S, 1, MetaFixPointNumber);\
-    FixNumber *p1 = (FixNumber*)luaL_checkudata(S, 2, MetaFixPointNumber);\
+    NFix *p0 = (NFix*)luaL_checkudata(S, 1, _METAFPN_);\
+    NFix *p1 = (NFix*)luaL_checkudata(S, 2, _METAFPN_);\
     lua_pushboolean(S,  p0->value __OP__ p1->value );\
     return 1;\
 }
@@ -94,14 +94,14 @@ static int _fpToString(lua_State *S)
     if(lua_gettop(S) != 1){
         luaL_error(S, "Wrong number for fp-to-string");
     }
-    FixNumber *p0 = (FixNumber*)luaL_checkudata(S, 1, MetaFixPointNumber);
+    NFix *p0 = (NFix*)luaL_checkudata(S, 1, _METAFPN_);
     char buff[BUFSIZ];
     sprintf_s(buff, sizeof(buff), "fix(%f)", float(p0->value));
     lua_pushstring(S, buff);
     return 1;
 }
 
-static luaL_Reg _FixNumberEntries[]={
+static luaL_Reg _NFixEntries[]={
     {"__add", _fpAdd},
     {"__sub", _fpSub},
     {"__mul", _fpMult},
@@ -129,10 +129,10 @@ static int _createFix(lua_State *S)
     fix16 _n = n;
     fix16 _d = d;
     fix16 v = _n / _d;
-    FixNumber *fp = (FixNumber*)lua_newuserdata(S, sizeof(FixNumber));
-    luaL_getmetatable(S, MetaFixPointNumber);
+    NFix *fp = (NFix*)lua_newuserdata(S, sizeof(NFix));
+    luaL_getmetatable(S, _METAFPN_);
     if(lua_isnil(S, -1)){
-        luaL_error(S, "No such metatable:%s", MetaFixPointNumber);
+        luaL_error(S, "No such metatable:%s", _METAFPN_);
     }
     lua_setmetatable(S, -2);
     // Assignment
@@ -148,10 +148,10 @@ static luaL_Reg _funcs[]={
 extern "C" int luaopen_fp(lua_State *S)
 {
     //The types
-    luaL_newmetatable(S, MetaFixPointNumber);
+    luaL_newmetatable(S, _METAFPN_);
     lua_pushvalue(S, -1);
     lua_setfield(S, -2, "__index");
-    luaL_register(S, NULL, _FixNumberEntries);
+    luaL_register(S, NULL, _NFixEntries);
 
     //~ And the libs
     luaL_register(S, "func", _funcs);
