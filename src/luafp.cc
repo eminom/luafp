@@ -52,9 +52,26 @@ static int _fp##__NAME__(lua_State *S)\
 }
 
 static int _fpUnm(lua_State *S){
-    if(lua_gettop(S)!=1){
-        luaL_error(S, "Error count of parameter for -");
+#if 0
+    if(lua_gettop(S)!=2){
+				printf("%d\n", lua_gettop(S));
+        luaL_error(S, "Error count of parameter for -(unm)");
     }
+#endif
+
+#if 0
+		do {
+			const char *p1 = lua_typename(S, lua_type(S, 1));
+			printf("%s\n", (p1 ? p1 :""));
+			const char *p2 = lua_typename(S, lua_type(S, 2));
+			printf("%s\n", (p2 ? p2 :""));
+			//And they are the userdata
+			NFix *ptr0 = (NFix*)luaL_checkudata(S, 1, _METAFPN_);
+			NFix *ptr1 = (NFix*)luaL_checkudata(S, 2, _METAFPN_);
+			printf("%p,  %p\n", ptr0, ptr1);
+		}while(0);
+#endif 
+
     NFix *p0 = (NFix*)luaL_checkudata(S, 1, _METAFPN_);
     _pushNFix(S, - p0->val);
     return 1;
@@ -153,19 +170,20 @@ static int _createFix(lua_State *S)
     fix16 _n = n;
     fix16 _d = d;
     fix16 v = _n / _d;
-    NFix *fp = (NFix*)lua_newuserdata(S, sizeof(NFix));
-    luaL_getmetatable(S, _METAFPN_);
-    if(lua_isnil(S, -1)){
-        luaL_error(S, "No such metatable:%s", _METAFPN_);
-    }
-    lua_setmetatable(S, -2);
-    // Assignment
-    fp->val = v;
+		_pushNFix(S, v);
     return 1;
 }   
 
+static int _createFix0(lua_State *S)
+{
+	float v = luaL_checknumber(S, 1);
+	_pushNFix(S, v);
+	return 1;
+}
+
 static luaL_Reg _funcs[]={
     {"CreateFix", _createFix},
+		{"CreateFix0", _createFix0},
     {NULL, NULL}
 };
 
