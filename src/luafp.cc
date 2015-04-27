@@ -14,7 +14,9 @@ extern "C"{
 
 typedef fixedpoint::fixed_point<16> fix16;
 
+#if !defined(_MSV_VER)
 #define sprintf_s snprintf
+#endif
 
 // Hand-crafted codes.
 
